@@ -1,0 +1,33 @@
+Bandwidth reports for Zabbix
+
+This has been tested to work with 1.6.x
+
+Before you install this script there are a few things you must do.
+
+First you will need the following ruby gems installed
+
+active record
+ruport
+tmail
+
+You will also need to edit the mysql_parts.sql file.  Specificially you will need to edit
+the mysql view that get's created at the bottom.  There is a string used that looks similar to
+"ifinoctets" and "ifoutoctets".  You will need to chagne this string to match how you have
+your interface items set.  The % character is a wildcard character.
+
+There is also a statement that looks similar to this:
+substr(`items`.`description`,11)
+
+You will need to change the number to match the start of the port number in 
+the description string.  For example if your descriptions look similar to 
+this:  "Inbound 01" you would change the statement to look like the 
+following: substr(`items`.`description`,9).  If your description string looked
+like the following: "Interface 01 Inbound" you would change the statement to 
+look as follows: substr(`items`.`description`,11,2).  You will need to adjust 
+this statement for both inbound and outbound description types.
+
+After that add the mysql components to your db by doing somethign similar to 
+the following:
+
+cat mysql_parts | mysql zabbix
+(you may need to alter this statement to fit your environment)

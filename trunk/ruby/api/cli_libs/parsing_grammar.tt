@@ -1,0 +1,117 @@
+#GPL 2.0  http://www.gnu.org/licenses/gpl-2.0.html
+#Zabbix CLI Tool and associated files
+#Copyright (C) 2009 Andrew Nelson nelsonab(at)pobox(removethisword)(dot)com
+#
+#This program is free software; you can redistribute it and/or
+#modify it under the terms of the GNU General Public License
+#as published by the Free Software Foundation; either version 2
+#of the License, or (at your option) any later version.
+#
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License
+#along with this program; if not, write to the Free Software
+#Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+##########################################
+# Subversion information
+# $Id$
+# $Revision$
+##########################################
+
+grammar ZbxAPI_TT
+  rule sentence
+      statement
+  end
+
+  rule statement
+    ( variable command param:.+ /
+      variable command /
+      command param:.+ /
+      command )  {
+      def pieces
+        if defined? command then
+          retval = {}
+          retval.merge!(variable.pieces) if defined? variable
+          retval.merge!(command.pieces)
+          retval.merge!({:parameters => param.text_value.lstrip.chomp}) if defined? param
+          retval
+        else
+          {:command => text_value.gsub(/\s/,'').intern}
+        end
+      end
+    }
+  end
+
+  rule variable
+    '$' word_char_first empty_space '=' empty_space? {
+      def pieces
+        { :variable=>word_char_first.text_value }
+      end
+    }
+  end
+
+  rule command
+     ( command_simple / 'get hostgroup' / 'get host' /
+       'add host' / 'get user' / 'load config' /
+       'get item' / 'set debug' / 'add usermedia' / 'add user' /
+       'delete user' / 'set lines' / 'update user' /
+       'set pause' ) {
+      def pieces
+
+        if defined? command_simple then
+          command_simple.pieces
+        else
+          { :command=>text_value.gsub(/\s/,'').intern }
+        end
+      end
+     }
+  end
+
+  rule command_simple
+    ( 'help' / 'quit' / 'exit' / 'info' / 'history' / 'login' / 'import') {
+      def pieces
+        { :command=>text_value.intern }
+      end
+    }
+  end
+
+  rule word
+    chars_no_space+
+  end
+
+  rule url_http
+    'http://' chars_no_space*
+  end
+
+  rule chars_no_space
+    [^\t `=&$@]
+  end
+
+  rule word_char_first
+    (alpha [a-zA-Z0-9_]*) / ([a-zA-Z])
+  end
+
+  rule comment_char
+    [#]+
+  end
+
+  rule empty_space
+    [\t ]*
+  end
+
+  rule spaces
+    [\t ]+
+  end
+
+  rule alpha
+    [a-zA-Z]
+  end
+
+  rule digit
+    [0-9]
+  end
+end

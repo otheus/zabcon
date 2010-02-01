@@ -1,0 +1,5 @@
+server=http://localhost
+username=admin
+password=zabbix
+lines=24
+debug=0
